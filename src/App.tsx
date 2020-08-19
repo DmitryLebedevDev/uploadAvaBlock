@@ -1,102 +1,112 @@
-import React, { useState, useRef } from 'react';
+import React, {useReducer} from 'react';
+import AvaBlock from './components/avaBlock';
+import {uploadAvaRequest} from './api/api';
 import './App.css';
-import Button from '@material-ui/core/Button';
-import { makeStyles } from '@material-ui/core';
-import CircularProgress from '@material-ui/core/CircularProgress';
 
-const widthAva = 200;
+export type ActionsOfObj<obj> = obj extends { [key: string]: (...arg: any) => infer fullActions } ? fullActions : never;
 
-const useStyles = makeStyles({
-  avgWrap: {
-    position: 'relative',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: widthAva,
-    width: widthAva,
-    borderRadius: widthAva/2,
-    overflow: 'hidden',
-  },
-  avaImg: {
-    height: 'inherit',
-  },
-  avaBlock: {
-    display: 'flex',
-    justifyContent: 'center'
-  },
-  btsBlock: {
-    display: 'flex',
-    justifyContent: 'center',
-    paddingTop: '10px',
-    '& > button + button': {
-      marginLeft: 10
+const initialState = {
+  isUploadingAva: false,
+  avaUrl: 'https://www.imgonline.com.ua/examples/bee-on-daisy.jpg',
+  uploadPrograss: 0,
+  textError: undefined as undefined | string
+};
+
+const actions = {
+  startUpload: () => ({
+    type: "START_UPLOAD"
+  }) as const,
+  changeUploadProgress: (value: number) => ({
+    type: "CHANGE_PROGRESS",
+    value,
+  }) as const,
+  endUpload: (avaUrl: string) => ({
+    type: "END_UPLOAD",
+    avaUrl
+  }) as const,
+  setErrorRequest: (textError: string) => ({
+    type: "SET_ERROR",
+    textError
+  }) as const,
+  resetRequestError: () => ({
+    type: "RESET_ERROR"
+  }) as const,
+}
+
+function reducer(state: typeof initialState, action: ActionsOfObj<typeof actions>): typeof initialState {
+  switch (action.type) {
+    case "START_UPLOAD": {
+      return {
+        ...state,
+        isUploadingAva: true,
+        uploadPrograss: 0,
+      }
     }
-  },
-  uploadProgress: {
-    position: 'absolute',
+    case "CHANGE_PROGRESS": {
+      return {
+        ...state,
+        uploadPrograss: action.value
+      }
+    }
+    case "END_UPLOAD": {
+      return {
+        ...state,
+        avaUrl: action.avaUrl,
+        uploadPrograss: 0,
+        isUploadingAva: false,
+        textError: undefined
+      }
+    }
+    case "SET_ERROR": {
+      return {
+        ...state,
+        textError: action.textError,
+        isUploadingAva: false,
+        uploadPrograss: 0,
+      }
+    }
+    case "RESET_ERROR": {
+      return {
+        ...state,
+        textError: ''
+      }
+    }
+    default:
+      return state;
   }
-});
+}
 
 function App() {
-  const [isEditMod, setIsEditMod] = useState(false);
-  const [imgUrl, setImgUrl] = useState('');
-  const imgRef = useRef<HTMLImageElement|null>(null);
-  const clearLocalImg = () => {setImgUrl(''); setIsEditMod(false)};
-  const handleChangeImg = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (imgRef.current && e.target.files && e.target.files[0]) {
-      var oFReader = new FileReader();
-      oFReader.readAsDataURL(e.target.files[0]);
-      oFReader.onload = function (oFREvent) {
-        if (oFREvent.target) {
-          if (typeof oFREvent.target.result === 'string') {
-            setIsEditMod(true);
-            setImgUrl(oFREvent.target.result);
-          }
-        }
-      };
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const uploadAvaThunk = (ava?: File) => {
+    if (ava) {
+      const formData = new FormData();
+      formData.append('ava', ava);
+      
+      // fix rerenders then error request
+      let requestIsEnd = false;
+      setTimeout(() => !requestIsEnd && dispatch(actions.startUpload()),25);
+      uploadAvaRequest(formData, (v) => dispatch(actions.changeUploadProgress(v)))
+        .then(avaUrl => {
+          dispatch(actions.endUpload(avaUrl));
+        })
+        .catch(() => {
+          dispatch(actions.setErrorRequest('Error loading'))
+        })
+        .then(() => {requestIsEnd = true})
     }
   }
-
-  const styles = useStyles();
+  const resetError = () => dispatch(actions.resetRequestError());
+  
   return (
     <div className="App">
-      <div className={styles.avaBlock}>
-        <div className={styles.avgWrap}>
-          <img className={styles.avaImg}
-             ref={imgRef}
-             src={imgUrl} 
-             alt=""
-          />
-          <CircularProgress className={styles.uploadProgress}
-                            variant="static"
-                            value={95}
-                            size={widthAva+(widthAva/8)}
-          />
-        </div>
-        <input id="uploadUserAva" 
-               type="file" 
-               style={{display: 'none'}} 
-               onChange={handleChangeImg}
-               accept=".png,.jpg"
-               size={2000000}
-        />
-      </div>
-      <div className={styles.btsBlock}>
-        {isEditMod ? <>
-          <Button variant="contained">
-            upload
-          </Button>
-          <Button variant="contained" onClick={clearLocalImg}>
-            reset
-          </Button>
-        </> :
-          <label htmlFor="uploadUserAva" >
-            <Button variant="contained" component="span">
-              change
-            </Button>
-          </label>
-        }
-      </div>
+      <AvaBlock uploadAvaThunk={uploadAvaThunk}
+                resetError={resetError}
+                avaUrl={state.avaUrl}
+                textError={state.textError}
+                uploadProgress={state.uploadPrograss}
+                isUploadingAva={state.isUploadingAva}
+      />
     </div>
   );
 }
