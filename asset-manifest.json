@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/uploadAvaBlock/static/css/main.18e63f31.chunk.css",
+    "main.js": "/uploadAvaBlock/static/js/main.12db4bc6.chunk.js",
+    "main.js.map": "/uploadAvaBlock/static/js/main.12db4bc6.chunk.js.map",
+    "runtime-main.js": "/uploadAvaBlock/static/js/runtime-main.b5352d38.js",
+    "runtime-main.js.map": "/uploadAvaBlock/static/js/runtime-main.b5352d38.js.map",
+    "static/js/2.e2f748e6.chunk.js": "/uploadAvaBlock/static/js/2.e2f748e6.chunk.js",
+    "static/js/2.e2f748e6.chunk.js.map": "/uploadAvaBlock/static/js/2.e2f748e6.chunk.js.map",
+    "index.html": "/uploadAvaBlock/index.html",
+    "precache-manifest.e2e59aff56c32f57155570aed0ea6895.js": "/uploadAvaBlock/precache-manifest.e2e59aff56c32f57155570aed0ea6895.js",
+    "service-worker.js": "/uploadAvaBlock/service-worker.js",
+    "static/css/main.18e63f31.chunk.css.map": "/uploadAvaBlock/static/css/main.18e63f31.chunk.css.map",
+    "static/js/2.e2f748e6.chunk.js.LICENSE.txt": "/uploadAvaBlock/static/js/2.e2f748e6.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.b5352d38.js",
+    "static/js/2.e2f748e6.chunk.js",
+    "static/css/main.18e63f31.chunk.css",
+    "static/js/main.12db4bc6.chunk.js"
+  ]
+}
