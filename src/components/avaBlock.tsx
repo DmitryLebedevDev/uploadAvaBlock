@@ -26,8 +26,12 @@ const useStyles = makeStyles({
   btnsBlock: {
     position: 'relative',
     display: 'flex',
-    justifyContent: 'center',
+    flexDirection: 'column',
+    alignItems: 'center',
     paddingTop: '25px',
+  },
+  btns: {
+    paddingBottom: 10,
     '& > button + button': {
       marginLeft: 10
     }
@@ -48,6 +52,7 @@ interface Iprops {
   isUploadingAva: boolean
   uploadProgress: undefined | number
   resetError: () => void
+  uploadAvaRequestCancelThunk: () => void
   uploadAvaThunk: (ava?: File) => void
 }
 
@@ -126,16 +131,24 @@ function AvaBlock(props: Iprops) {
                 {props.textError}
               </div>
             }
-            <Button onClick={() => props.uploadAvaThunk(imgInfo.file)}
-                    disabled={props.isUploadingAva} 
-                    variant="contained">
-              {props.textError ? 'try again' : 'upload'}
-            </Button>
-            <Button onClick={clearLocalImgAndResetError}
-                    disabled={props.isUploadingAva} 
-                    variant="contained"
+            <div className={styles.btns}>
+              <Button onClick={() => props.uploadAvaThunk(imgInfo.file)}
+                  disabled={props.isUploadingAva} 
+                  variant="contained">
+                {props.textError ? 'try again' : 'upload'}
+              </Button>
+              <Button onClick={clearLocalImgAndResetError}
+                      disabled={props.isUploadingAva} 
+                      variant="contained"
+              >
+                reset
+              </Button>
+            </div>
+            <Button onClick={props.uploadAvaRequestCancelThunk}
+                    disabled={!props.isUploadingAva}
+                    variant="contained" style={{opacity: props.isUploadingAva ? 1 : 0, transition: '0.5s'}}
             >
-              reset
+              stop upload
             </Button>
           </>
           :

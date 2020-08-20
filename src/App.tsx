@@ -1,7 +1,9 @@
 import React, {useReducer} from 'react';
 import AvaBlock from './components/avaBlock';
 import {uploadAvaRequest} from './api/api';
+import {uploadAvaRequestCancel} from './api/api';
 import './App.css';
+import * as axios from 'axios';
 
 export type ActionsOfObj<obj> = obj extends { [key: string]: (...arg: any) => infer fullActions } ? fullActions : never;
 
@@ -15,6 +17,9 @@ const initialState = {
 const actions = {
   startUpload: () => ({
     type: "START_UPLOAD"
+  }) as const,
+  stopUpload: () => ({
+    type: "STOP_UPLOAD"
   }) as const,
   changeUploadProgress: (value: number) => ({
     type: "CHANGE_PROGRESS",
@@ -71,6 +76,13 @@ function reducer(state: typeof initialState, action: ActionsOfObj<typeof actions
         textError: ''
       }
     }
+    case "STOP_UPLOAD": {
+      return {
+        ...state,
+        isUploadingAva: false,
+        uploadPrograss: 0,
+      }
+    }
     default:
       return state;
   }
@@ -90,17 +102,25 @@ function App() {
         .then(avaUrl => {
           dispatch(actions.endUpload(avaUrl));
         })
-        .catch(() => {
+        .catch((error) => {
+          !axios.default.isCancel(error) &&
           dispatch(actions.setErrorRequest('Error loading'))
         })
         .then(() => {requestIsEnd = true})
     }
   }
+  const uploadAvaRequestCancelThunk = () => {
+    if(uploadAvaRequestCancel.cancel) {
+      uploadAvaRequestCancel.cancel();
+      dispatch(actions.stopUpload());
+    }
+  }
   const resetError = () => dispatch(actions.resetRequestError());
-  
+
   return (
     <div className="App">
       <AvaBlock uploadAvaThunk={uploadAvaThunk}
+                uploadAvaRequestCancelThunk={uploadAvaRequestCancelThunk}
                 resetError={resetError}
                 avaUrl={state.avaUrl}
                 textError={state.textError}
