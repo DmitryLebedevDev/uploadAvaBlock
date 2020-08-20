@@ -1,6 +1,6 @@
 import React, {useReducer} from 'react';
 import AvaBlock from './components/avaBlock';
-import {uploadAvaRequest} from './api/api';
+import {uploadAvaRequest, resultCodeInfo} from './api/api';
 import {uploadAvaRequestCancel} from './api/api';
 import './App.css';
 import * as axios from 'axios';
@@ -45,6 +45,7 @@ function reducer(state: typeof initialState, action: ActionsOfObj<typeof actions
         ...state,
         isUploadingAva: true,
         uploadPrograss: 0,
+        textError: '',
       }
     }
     case "CHANGE_PROGRESS": {
@@ -93,18 +94,23 @@ function App() {
   const uploadAvaThunk = (ava?: File) => {
     if (ava) {
       const formData = new FormData();
-      formData.append('ava', ava);
+      formData.append('img', ava);
       
       // fix rerenders then error request
       let requestIsEnd = false;
-      setTimeout(() => !requestIsEnd && dispatch(actions.startUpload()),25);
+      setTimeout(() => !requestIsEnd && dispatch(actions.startUpload()),100);
       uploadAvaRequest(formData, (v) => dispatch(actions.changeUploadProgress(v)))
-        .then(avaUrl => {
-          dispatch(actions.endUpload(avaUrl));
+        .then(avaLoadInfo => {
+          if (avaLoadInfo.resultCode === resultCodeInfo.sicces && avaLoadInfo.data) {
+            dispatch(actions.endUpload(process.env.REACT_APP_BACK_URL+avaLoadInfo.data.link));
+          } else {
+            dispatch(actions.setErrorRequest('Error loading'))
+          }
         })
         .catch((error) => {
-          !axios.default.isCancel(error) &&
-          dispatch(actions.setErrorRequest('Error loading'))
+          if (!axios.default.isCancel(error)) {
+            dispatch(actions.setErrorRequest('Error loading'))
+          }
         })
         .then(() => {requestIsEnd = true})
     }
